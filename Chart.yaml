@@ -1,0 +1,23 @@
+apiVersion: v1
+appVersion: "1.0"
+name: <CHARTNAME>
+version: 1.0.0
+description: Helm chart for <CHARTNAME> service
+sources:
+  - https://github.com/MahaGamal/<CHARTNAME>/blob/main/chart/<CHARTNAME>
+home: https://github.com/MahaGamal/helm-starter.git
+maintainers:
+  - name: MahaAmer
+## Example dependencies:
+#dependencies:
+#   - name: "postgresql"
+#     alias: "postgresql"
+#     version: 0.15.0
+#     repository: https://charts.helm.sh/stable
+#     condition: postgresql.enabled
+#
+#   - name: "redis"
+#     alias: "redis"
+#     version: 3.6.4
+#     repository: https://charts.helm.sh/stable
+#     condition: redis.enabled

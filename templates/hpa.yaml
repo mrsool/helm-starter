@@ -1,0 +1,62 @@
+{{- if  .Values.hpa.enabled }}
+{{- if .Capabilities.APIVersions.Has "autoscaling/v2" }}
+apiVersion: autoscaling/v2
+{{- else }}
+apiVersion: autoscaling/v2beta2
+{{- end }}
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "<CHARTNAME>.fullname" . }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "<CHARTNAME>.fullname" . }}
+  minReplicas: {{ .Values.hpa.minpods }}
+  maxReplicas: {{ .Values.hpa.maxpods }}
+  metrics:
+
+  {{- if  .Values.hpa.memoryAverageUtilization }}
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.hpa.memoryAverageUtilization }}
+  {{- end }}
+
+  {{- if  .Values.hpa.cpuAverageUtilization }}
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.hpa.cpuAverageUtilization }}
+  {{- end }}
+
+  {{- if .Values.hpa.customMetrics -}}
+  {{- toYaml .Values.hpa.customMetrics | nindent 2 }}
+  {{- end }}
+
+  behavior:
+
+    scaleDown:
+      stabilizationWindowSeconds: {{ default 60 .Values.hpa.scaleDown.stabilizationWindowSeconds }}
+      policies:
+        - type: {{default "Pods" .Values.hpa.scaleDown.type }}
+          value: {{ default 1 .Values.hpa.scaleDown.value }}
+          periodSeconds: {{ default 15 .Values.hpa.scaleDown.periodSeconds }}
+
+    scaleUp:
+      stabilizationWindowSeconds: {{ default 60 .Values.hpa.scaleUp.stabilizationWindowSeconds }}
+      policies:
+        - type: {{ default "Pods" .Values.hpa.scaleUp.type }}
+          value: {{ default 5 .Values.hpa.scaleUp.value }}
+          periodSeconds: {{default 15 .Values.hpa.scaleUp.periodSeconds }}
+
+
+    {{- if .Values.hpa.customBehavior -}}
+    {{- toYaml .Values.hpa.customBehavior | nindent 2 }}
+    {{- end }}
+
+{{- end }}
