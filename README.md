@@ -1,17 +1,17 @@
 # <CHARTNAME> Helm Chart
 
-Generate your service chart with 
+## Generate Helm chart 
 
- sh 
  ```
- helm create <CHARTNAME> --starter PATH/helm-starter
+ helm create <CHARTNAME/SERVICENAME> --starter PATH/helm-starter
+
  ```
+ Will generate folder per <CHARTNAME/SERVICENAME> with helm chart  
 
-## Installation & Upgrade
-
+# Installation & Upgrade your <CHARTNAME/SERVICENAME> 
 ```sh
 # Assuming Workdir is inside helm chart dir
-helm upgrade -i -<CHARTNAME> --install --namespace <ns> ./ [--version CHART-VERSION] --debug
+helm upgrade -i -<RELEASENAME> --install --namespace <ns> ./ [--version CHART-VERSION] --debug
 ```
 
 ## Configuration
@@ -46,9 +46,8 @@ Parameter | Description | Default
 `server.tolerations` | node taints to tolerate (requires Kubernetes >=1.6) | `[]`
 `server.affinity` | node/pod affinities (requires Kubernetes >=1.6) | `{}`
 `server.nodeSelector` | node labels for pod assignment | `{}`
-
 `serviceAccounts.enabled` | if `true`, Create service accounts | `false`
 `service.ports.http` | Sets service http port | `80`
 `service.type` | type of server service to create | `ClusterIP`
-
+Service Monitoring configurations 
 `serviceMonitor.enabled` | if `true`, enable Prometheus metrics | `false`
