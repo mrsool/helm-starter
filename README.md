@@ -1,6 +1,6 @@
 # <CHARTNAME> Helm Chart
 
-## Generate Helm chart 
+## Generate Your Helm chart 
 
  ```
  helm create <CHARTNAME/SERVICENAME> --starter PATH/helm-starter
@@ -8,7 +8,7 @@
  ```
  Will generate folder per <CHARTNAME/SERVICENAME> with helm chart  
 
-# Installation & Upgrade your <CHARTNAME/SERVICENAME> 
+## Install & Upgrade your <CHARTNAME/SERVICENAME> 
 ```sh
 # Assuming Workdir is inside helm chart dir
 helm upgrade -i -<RELEASENAME> --install --namespace <ns> ./ [--version CHART-VERSION] --debug
