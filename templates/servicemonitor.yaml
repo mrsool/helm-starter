@@ -1,28 +1,30 @@
-{{- if .Values.serviceMonitor.enabled -}}
+{{- range $name, $values := .Values.Servers }}
+{{- if $values.serviceMonitor.enabled -}}
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "<CHARTNAME>.fullname" . }}-sm
-  namespace: {{ $.Values.serviceMonitor.namespace }}
+  name: {{ include "<CHARTNAME>.fullname" $ }}-{{ $name }}-sm
+  namespace: {{ $values.serviceMonitor.namespace }}
   labels:
-    app: {{ include "<CHARTNAME>.name" . }}
-    chart: {{ include "<CHARTNAME>.chart" . }}
+    app: {{ include "<CHARTNAME>.name" $ }}
+    chart: {{ include "<CHARTNAME>.chart" $ }}
     release: {{ .Release.Name }}
-    helm.sh/chart: {{ include "<CHARTNAME>.chart" . }}
-    app.kubernetes.io/name: {{ include "<CHARTNAME>.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    helm.sh/chart: {{ include "<CHARTNAME>.chart" $ }}
+    app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
 spec:
   selector:
     matchLabels:
-      app: {{ include "<CHARTNAME>.name" . }}
-      release: {{ .Release.Name }}
+      app: {{ include "<CHARTNAME>.name" $ }}
+      release: {{ $.Release.Name }}
   namespaceSelector:
     matchNames:
-    - {{ .Release.Namespace }}
+    - {{ $.Release.Namespace }}
   endpoints:
     - port: http
       interval: 10s
       path: /prometheus
       honorLabels: true
+{{- end }}
 {{- end }}

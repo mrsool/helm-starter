@@ -1,43 +1,25 @@
-{{- if .Values.ingress.enabled -}}
-{{- $fullName := include "<CHARTNAME>.fullname" . -}}
-{{- if not (.Capabilities.APIVersions.Has "networking.istio.io/v1alpha3") -}}
-
-{{- if .Values.ingress.basicAuth -}}
-apiVersion: v1
-data:
-  auth: {{ .Values.ingress.basicAuth | b64enc | quote }}
-kind: Secret
-metadata:
-  name: {{ $fullName }}-basic-auth
-type: Opaque
-{{ end }}
-
----
+{{- range $name, $values := .Values.Servers }}
+{{- if $values.ingress.enabled -}}
+{{- $fullName := include "<CHARTNAME>.fullname" $ -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ $fullName }}
+  name: {{ include "<CHARTNAME>.fullname" $ }}-{{ $name }}
   labels:
-    app: {{ include "<CHARTNAME>.name" . }}
-    chart: {{ include "<CHARTNAME>.chart" . }}
-    release: {{ .Release.Name }}
-    helm.sh/chart: {{ include "<CHARTNAME>.chart" . }}
-    app.kubernetes.io/name: {{ include "<CHARTNAME>.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    app: {{ include "<CHARTNAME>.name" $ }}
+    chart: {{ include "<CHARTNAME>.chart" $ }}
+    release: {{ $.Release.Name }}
+    helm.sh/chart: {{ include "<CHARTNAME>.chart" $ }}
+    app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
   annotations:
-  {{- with .Values.ingress.annotations }}
+  {{- with $values.ingress.annotations }}
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- if .Values.ingress.basicAuth }}
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/auth-type: basic
-    nginx.ingress.kubernetes.io/auth-secret: {{ $fullName }}-basic-auth
-    nginx.ingress.kubernetes.io/auth-realm: "Authentication Required!"
-  {{ end }}
 spec:
   rules:
-  {{- range $host := .Values.ingress.hosts }}
+  {{- range $host := $values.ingress.hosts }}
   {{- if $host.subdomain.enabled }}
     {{- $subdomain := default $fullName $host.subdomain.value }}
     - host: {{ printf "%s.%s" $subdomain $host.zone | quote }}
@@ -45,97 +27,20 @@ spec:
     - host: {{ tpl $host.zone $ | quote }}
       http:
         paths:
-          - path: {{ $.Values.ingress.path }}
+          - path: {{ $values.ingress.path }}
             pathType: ImplementationSpecific
             backend:
               service:
-                name: {{ $fullName }}
+                name: {{ $fullName }}-{{ $name }}
                 port:
                   number: 80
-{{- if $.Values.ingress.tls }}
+  {{- end }}
+  {{- if $values.ingress.tls }}
   tls:
   - hosts:
     - {{ tpl $host.zone $ | quote }}
-    secretName: {{ tpl $.Values.ingress.tls.secretName $ | quote}}
-    {{- end}}
+    secretName: {{ tpl $values.ingress.tls.secretName $ | quote}}
+  {{- end}}
   {{- end }}
-  {{- end }}
-{{- else }}
-{{- $servicePort := .Values.service.port -}}
-{{- $ingressPath := .Values.ingress.path -}}
-### Istio VirtualService ###
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: {{ $fullName }}
-  labels:
-    app: {{ template "<CHARTNAME>.name" . }}
-    chart: {{ template "<CHARTNAME>.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-spec:
-  hosts:
-  {{- range $host := .Values.ingress.hosts }}
-  {{- if $host.subdomain.enabled }}
-    {{- $subdomain := default $fullName $host.subdomain.value }}
-    - {{ printf "%s.%s" $subdomain $host.zone | quote }}
-  {{- else }}
-    - {{ $host.zone | quote }}
-  {{- end }}
-  {{- end }}
-  gateways:
-  - {{ $fullName }}
-  http:
-  - match:
-    - uri:
-      prefix: {{ $.Values.ingress.path }}
-    route:
-    - destination:
-        port:
-          number: {{ $servicePort }}
-        host: {{ include "<CHARTNAME>.fullname" $ }}
----
-### Istio Gateway ###
-apiVersion: networking.istio.io/v1alpha3
-kind: Gateway
-metadata:
-  name: {{ $fullName }}
-  labels:
-    app: {{ template "<CHARTNAME>.name" . }}
-    chart: {{ template "<CHARTNAME>.chart" . }}
-    release: {{ .Release.Name }}
-    heritage: {{ .Release.Service }}
-spec:
-  selector:
-    istio: ingressgateway # use Istio default gateway implementation
-  servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    {{- range $host := .Values.ingress.hosts }}
-    {{- if $host.subdomain.enabled }}
-      {{- $subdomain := default $fullName $host.subdomain.value }}
-      - {{ printf "%s.%s" $subdomain $host.zone | quote }}
-    {{- else }}
-      - {{ $host.zone | quote }}
-    {{- end }}
-    {{- end }}
-    tls:
-      httpsRedirect: true # sends 301 redirect for http requests
-  - port:
-      number: 443
-      name: https
-      protocol: HTTP
-    hosts:
-    {{- range $host := .Values.ingress.hosts }}
-    {{- if $host.subdomain.enabled }}
-      {{- $subdomain := default $fullName $host.subdomain.value }}
-      - {{ printf "%s.%s" $subdomain $host.zone | quote }}
-    {{- else }}
-      - {{ $host.zone | quote }}
-    {{- end }}
-    {{- end }}
 {{- end }}
 {{- end }}
