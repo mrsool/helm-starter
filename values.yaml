@@ -122,7 +122,13 @@ Servers:
       # the names of existing secrets names
       #  - existsecret
       #  - secondsecret
-
+    
+    ## Specifies the path to the ProxySQL configuration file stored in 1Password (The path follows the structure of a vaults directory). 
+    ## This path contains the auth auth environment variables.
+    # Used by existSecretNames
+    environmentVariablesOnePasswordPath: ""
+    #"vaults/xx-staging/items/xx-environment-variables"
+  
     # add containerVolumeMounts to container
     containerVolumeMounts: []
       # - name: secret
