@@ -104,6 +104,10 @@ spec:
                 name: {{ tpl $secretname $ | quote }}
             {{- end }}
             {{- end }}
+            {{- if  $values.environmentVariablesOnePasswordPath }}
+            - secretRef:
+              name: {{ include "<CHARTNAME>.fullname" $ }}-{{ $name }}-environment-variables
+            {{- end }}
           {{- with $values.securityContext }}
           securityContext:
           {{ toYaml . | nindent 12 }}

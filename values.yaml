@@ -148,6 +148,9 @@ Servers:
     serviceMonitor:
       enabled: false
       namespace: monitoring
+      port: http
+      interval: 10s
+      path: /
 
     # Service configuration
     service:

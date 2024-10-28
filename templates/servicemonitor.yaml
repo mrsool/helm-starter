@@ -3,7 +3,7 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: {{ include "<CHARTNAME>.fullname" $ }}-{{ $name }}-sm
+  name: {{ include "<CHARTNAME>.fullname" $ }}-{{ $name }}
   namespace: {{ $values.serviceMonitor.namespace }}
   labels:
     app: {{ include "<CHARTNAME>.name" $ }}
@@ -22,9 +22,9 @@ spec:
     matchNames:
     - {{ $.Release.Namespace }}
   endpoints:
-    - port: http
-      interval: 10s
-      path: /prometheus
+    - port: {{ $values.serviceMonitor.port }}
+      interval: {{ $values.serviceMonitor.interval }}
+      path: {{ $values.serviceMonitor.path }}
       honorLabels: true
 {{- end }}
 {{- end }}
