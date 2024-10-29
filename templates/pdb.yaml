@@ -1,5 +1,6 @@
 {{- range $name, $values := .Values.Servers }}
 {{- if  $values.pdb.enabled }}
+---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:

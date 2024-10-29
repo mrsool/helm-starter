@@ -1,4 +1,5 @@
 {{- range $name, $values := .Values.Servers }}
+---
 apiVersion: v1
 kind: Service
 metadata:

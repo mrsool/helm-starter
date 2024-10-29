@@ -1,6 +1,7 @@
 {{- range $name, $values := .Values.Servers }}
 {{- if $values.ingress.enabled -}}
 {{- $fullName := include "<CHARTNAME>.fullname" $ -}}
+---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:

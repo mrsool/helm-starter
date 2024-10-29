@@ -1,5 +1,6 @@
 {{- range $name, $values := .Values.Servers }}
 {{- if  $values.hpa.enabled }}
+---
 {{- if .Capabilities.APIVersions.Has "autoscaling/v2" }}
 apiVersion: autoscaling/v2
 {{- else }}

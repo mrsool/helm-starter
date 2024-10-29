@@ -1,5 +1,6 @@
 {{- range $name, $values := .Values.Servers }}
 {{- if $values.serviceMonitor.enabled -}}
+---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
@@ -8,7 +9,7 @@ metadata:
   labels:
     app: {{ include "<CHARTNAME>.name" $ }}
     chart: {{ include "<CHARTNAME>.chart" $ }}
-    release: {{ .Release.Name }}
+    release: {{ $.Release.Name }}
     helm.sh/chart: {{ include "<CHARTNAME>.chart" $ }}
     app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
     app.kubernetes.io/instance: {{ $.Release.Name }}

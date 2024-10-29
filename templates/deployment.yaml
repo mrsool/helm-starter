@@ -2,6 +2,7 @@
 {{- $fullName := include "<CHARTNAME>.fullname" $ }}  # Use $ to access the root context
 {{- $releasePrefix := include "<CHARTNAME>.releasePrefix" $ }}
 {{- $_ := set $.Release "Prefix" $releasePrefix }}
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
