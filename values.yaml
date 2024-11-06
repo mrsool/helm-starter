@@ -7,13 +7,17 @@ image:
 # nameOverride: ""
 # fullnameOverride: ""
 
+## for enabling the preview lables of pr the below:
+  # pr-branch: {{ .Values.prBranch }}
+  # suspender-env: "{{ .Values.suspenderEnv }}"
+  # dont_suspend: "{{ .Values.dont_suspend }}"
+  # pr-number: "pr-{{ .Values.prNumber }}"
+  # gh_num_website: "{{ .Values.run_number }}"
+previewLabels: false
+ 
+
 # Add labels that will be added to the resources
 extraLabels: {}
-    # pr-branch: {{ .Values.prBranch }}
-    # suspender-env: "{{ .Values.suspenderEnv }}"
-    # dont_suspend: "{{ .Values.dont_suspend }}"
-    # pr-number: "pr-{{ .Values.prNumber }}"
-    # gh_num_website: "{{ .Values.run_number }}"
     # tags.datadoghq.com/env: preview
     # tags.datadoghq.com/service: <CHARTNAME>
     # tags.datadoghq.com/version: "{{ .Values.imageTag }}"

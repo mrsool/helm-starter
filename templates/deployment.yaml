@@ -16,6 +16,13 @@ metadata:
     app.kubernetes.io/instance: {{ $.Release.Name }}
     app.kubernetes.io/managed-by: {{ $.Release.Service }}
     app.kubernetes.io/component: {{ $name }}
+    {{- if $.Values.previewLabels }}
+    pr-branch: "{{ $.Values.prBranch }}"
+    suspender-env: "{{ $.Values.suspenderEnv }}"
+    dont_suspend: "{{ $.Values.dont_suspend }}"
+    pr-number: "pr-{{ $.Values.prNumber }}"
+    gh_num_website: "{{ $.Values.run_number }}"
+    {{- end }}
     {{- if $.Values.extraLabels }}
     {{- toYaml $.Values.extraLabels | nindent 4 }}
     {{- end }}
@@ -107,7 +114,7 @@ spec:
             {{- end }}
             {{- if  $values.environmentVariablesOnePasswordPath }}
             - secretRef:
-              name: {{ include "<CHARTNAME>.fullname" $ }}-{{ $name }}-environment-variables
+                name: {{ include "<CHARTNAME>.fullname" $ }}-{{ $name }}-environment-variables
             {{- end }}
           {{- with $values.securityContext }}
           securityContext:
