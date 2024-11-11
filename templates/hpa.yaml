@@ -1,4 +1,6 @@
-{{- if  .Values.hpa.enabled }}
+{{- range $name, $values := .Values.Servers }}
+{{- if  $values.hpa.enabled }}
+---
 {{- if .Capabilities.APIVersions.Has "autoscaling/v2" }}
 apiVersion: autoscaling/v2
 {{- else }}
@@ -6,57 +8,55 @@ apiVersion: autoscaling/v2beta2
 {{- end }}
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "<CHARTNAME>.fullname" . }}
+  name: {{ include "<CHARTNAME>.fullname" . }}-{{ $name }}
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: {{ include "<CHARTNAME>.fullname" . }}
-  minReplicas: {{ .Values.hpa.minpods }}
-  maxReplicas: {{ .Values.hpa.maxpods }}
+  minReplicas: {{ $values.hpa.minpods }}
+  maxReplicas: {{ $values.hpa.maxpods }}
   metrics:
 
-  {{- if  .Values.hpa.memoryAverageUtilization }}
+  {{- if  $values.hpa.memoryAverageUtilization }}
   - type: Resource
     resource:
       name: memory
       target:
         type: Utilization
-        averageUtilization: {{ .Values.hpa.memoryAverageUtilization }}
+        averageUtilization: {{ $values.hpa.memoryAverageUtilization }}
   {{- end }}
 
-  {{- if  .Values.hpa.cpuAverageUtilization }}
+  {{- if  $values.hpa.cpuAverageUtilization }}
   - type: Resource
     resource:
       name: cpu
       target:
         type: Utilization
-        averageUtilization: {{ .Values.hpa.cpuAverageUtilization }}
+        averageUtilization: {{ $values.hpa.cpuAverageUtilization }}
   {{- end }}
 
-  {{- if .Values.hpa.customMetrics -}}
-  {{- toYaml .Values.hpa.customMetrics | nindent 2 }}
+  {{- if $values.hpa.customMetrics -}}
+  {{- toYaml $values.hpa.customMetrics | nindent 2 }}
   {{- end }}
 
   behavior:
-
     scaleDown:
-      stabilizationWindowSeconds: {{ default 60 .Values.hpa.scaleDown.stabilizationWindowSeconds }}
+      stabilizationWindowSeconds: {{ default 60 $values.hpa.scaleDown.stabilizationWindowSeconds }}
       policies:
-        - type: {{default "Pods" .Values.hpa.scaleDown.type }}
-          value: {{ default 1 .Values.hpa.scaleDown.value }}
-          periodSeconds: {{ default 15 .Values.hpa.scaleDown.periodSeconds }}
-
+        - type: {{default "Pods" $values.hpa.scaleDown.type }}
+          value: {{ default 1 $values.hpa.scaleDown.value }}
+          periodSeconds: {{ default 15 $values.hpa.scaleDown.periodSeconds }}
     scaleUp:
-      stabilizationWindowSeconds: {{ default 60 .Values.hpa.scaleUp.stabilizationWindowSeconds }}
+      stabilizationWindowSeconds: {{ default 60 $values.hpa.scaleUp.stabilizationWindowSeconds }}
       policies:
-        - type: {{ default "Pods" .Values.hpa.scaleUp.type }}
-          value: {{ default 5 .Values.hpa.scaleUp.value }}
-          periodSeconds: {{default 15 .Values.hpa.scaleUp.periodSeconds }}
+        - type: {{ default "Pods" $values.hpa.scaleUp.type }}
+          value: {{ default 5 $values.hpa.scaleUp.value }}
+          periodSeconds: {{default 15 $values.hpa.scaleUp.periodSeconds }}
 
-
-    {{- if .Values.hpa.customBehavior -}}
-    {{- toYaml .Values.hpa.customBehavior | nindent 2 }}
+    {{- if $values.hpa.customBehavior -}}
+    {{- toYaml $values.hpa.customBehavior | nindent 2 }}
     {{- end }}
 
+{{- end }}
 {{- end }}

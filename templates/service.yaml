@@ -1,27 +1,30 @@
+{{- range $name, $values := .Values.Servers }}
+---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "<CHARTNAME>.fullname" . }}
+  name: {{ include "<CHARTNAME>.fullname" $ }}-{{ $name }}
   labels:
-    app: {{ include "<CHARTNAME>.name" . }}
-    chart: {{ include "<CHARTNAME>.chart" . }}
-    release: {{ .Release.Name }}
-    helm.sh/chart: {{ include "<CHARTNAME>.chart" . }}
-    app.kubernetes.io/name: {{ include "<CHARTNAME>.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- with .Values.service.annotations }}
+    app: {{ include "<CHARTNAME>.name" $ }}
+    chart: {{ include "<CHARTNAME>.chart" $ }}
+    release: {{ $.Release.Name }}
+    helm.sh/chart: {{ include "<CHARTNAME>.chart" $ }}
+    app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+{{- with $values.service.annotations }}
   annotations:
     {{ toYaml . | nindent 4 }}
 {{- end }}
 spec:
-  type: {{ .Values.service.type }}
+  type: {{ $values.service.type }}
   ports:
-  {{- range $key, $value := .Values.service.ports }}
+  {{- range $key, $value := $values.service.ports }}
     - name: {{ $key }}
       {{- toYaml $value | nindent 6 }}
   {{- end }}
   selector:
-    app.kubernetes.io/name: {{ include "<CHARTNAME>.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
-    app.kubernetes.io/component: server
+    app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/component: {{ $name }}
+{{- end }}

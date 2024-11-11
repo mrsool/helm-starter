@@ -1,17 +1,20 @@
-{{- if  .Values.pdb.enabled }}
+{{- range $name, $values := .Values.Servers }}
+{{- if  $values.pdb.enabled }}
+---
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ include "<CHARTNAME>.fullname" . }}
+  name: {{ include "<CHARTNAME>.fullname" $ }}-{{ $name }}
 spec:
-  {{- with .Values.pdb.maxUnavailable }}
-  maxUnavailable: {{ . }}
+  {{- with $values.pdb.maxUnavailable }}
+  maxUnavailable: {{ $values.pdb.maxUnavailable }}
   {{- else }}
-  minAvailable: {{ .Values.pdb.minAvailable | default 0 }}
+  minAvailable: {{ $values.pdb.minAvailable | default 0 }}
   {{- end }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "<CHARTNAME>.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
-      app.kubernetes.io/component: server
+      app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      app.kubernetes.io/component: {{ $name }}
+{{- end }}
 {{- end }}

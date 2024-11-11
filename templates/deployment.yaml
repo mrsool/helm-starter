@@ -1,0 +1,163 @@
+{{- range $name, $values := .Values.Servers }}
+{{- $fullName := include "<CHARTNAME>.fullname" $ }}  # Use $ to access the root context
+{{- $releasePrefix := include "<CHARTNAME>.releasePrefix" $ }}
+{{- $_ := set $.Release "Prefix" $releasePrefix }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $fullName }}-{{ $name }}
+  labels:
+    app: {{ include "<CHARTNAME>.name" $ }}
+    chart: {{ include "<CHARTNAME>.chart" $ }}
+    release: {{ $.Release.Name }}
+    helm.sh/chart: {{ include "<CHARTNAME>.chart" $ }}
+    app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
+    app.kubernetes.io/instance: {{ $.Release.Name }}
+    app.kubernetes.io/managed-by: {{ $.Release.Service }}
+    app.kubernetes.io/component: {{ $name }}
+    {{- if $.Values.previewLabels }}
+    pr-branch: "{{ $.Values.prBranch }}"
+    suspender-env: "{{ $.Values.suspenderEnv }}"
+    dont_suspend: "{{ $.Values.dont_suspend }}"
+    pr-number: "pr-{{ $.Values.prNumber }}"
+    gh_num_website: "{{ $.Values.run_number }}"
+    {{- end }}
+    {{- if $.Values.extraLabels }}
+    {{- toYaml $.Values.extraLabels | nindent 4 }}
+    {{- end }}
+spec:
+  replicas: {{ $values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
+      app.kubernetes.io/instance: {{ $.Release.Name }}
+      app.kubernetes.io/component: {{ $name }}
+  strategy:
+    {{- with $values.upda<CHARTNAME>rategy }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "<CHARTNAME>.name" $ }}
+        chart: {{ include "<CHARTNAME>.chart" $ }}
+        release: {{ $.Release.Name }}
+        helm.sh/chart: {{ include "<CHARTNAME>.chart" $ }}
+        app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
+        app.kubernetes.io/instance: {{ $.Release.Name }}
+        app.kubernetes.io/component: {{ $name }}
+      {{- with $values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      annotations:
+        {{- with $values.podAnnotations }}
+        {{- range $key, $value := . }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
+    spec:
+      {{- if $values.ServiceAccount }}
+      serviceAccountName: {{ $fullName }}-{{ $name }}-sa
+      {{- end }}
+      containers:
+        - name: {{ $.Chart.Name }}-{{ $name }}
+          image: "{{ $.Values.image.repository }}:{{ $.Values.image.tag }}"
+          imagePullPolicy: {{ $.Values.image.pullPolicy }}
+          {{- with $values.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $values.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ $values.httpPort }}
+              protocol: TCP
+          {{- with $values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $values.health.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $values.health.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          env:
+            {{- range $key, $value := $values.env }}
+            - name: {{ $key }}
+              value: {{ tpl $value $ | quote }}
+            {{- end }}
+            {{- if $values.envVarSource }}
+            {{- range $key, $value := $values.envVarSource }}
+            - name: {{ $key }}
+              valueFrom: {{ tpl $value $ }}
+            {{- end }}
+            {{- end }}
+            {{- if $.Values.global }}
+            {{- range $key, $value := $.Values.global.env }}
+            - name: {{ $key }}
+              value: {{ tpl $value $ | quote }}
+            {{- end }}
+            {{- end }}
+          envFrom:
+            {{- if $values.existSecretNames }}
+            {{- range $secretname := $values.existSecretNames }}
+            - secretRef:
+                name: {{ tpl $secretname $ | quote }}
+            {{- end }}
+            {{- end }}
+            {{- if  $values.environmentVariablesOnePasswordPath }}
+            - secretRef:
+                name: {{ include "<CHARTNAME>.fullname" $ }}-{{ $name }}-environment-variables
+            {{- end }}
+          {{- with $values.securityContext }}
+          securityContext:
+          {{ toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $values.containerVolumeMounts }}
+          volumeMounts:
+            {{- tpl (toYaml .) $ | nindent 12 }}
+          {{- end }}
+      {{- if $values.antiAffinity }}
+      affinity:
+        {{- if eq $values.antiAffinity "hard" }}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - topologyKey: "kubernetes.io/hostname"
+              labelSelector:
+                matchLabels:
+                  app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
+                  app.kubernetes.io/instance: {{ $.Release.Name }}
+                  app.kubernetes.io/component: {{ $name }}
+        {{- else if eq $values.antiAffinity "soft" }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 1
+              podAffinityTerm:
+                topologyKey: kubernetes.io/hostname
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/name: {{ include "<CHARTNAME>.name" $ }}
+                    app.kubernetes.io/instance: {{ $.Release.Name }}
+                    app.kubernetes.io/component: {{ $name }}
+        {{- end }}
+      {{- end }}
+      {{- with $values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $values.volumes }}
+      volumes:
+        {{- tpl (toYaml .) $ | nindent 8 }}
+      {{- end }}
+{{- end }}
