@@ -1,5 +1,5 @@
 {{- range $name, $values := .Values.Servers }}
-{{- if $values.serviceMonitor.enabled -}}
+{{- if $values.serviceMonitor.enabled }}
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
